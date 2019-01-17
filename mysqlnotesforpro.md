@@ -238,3 +238,39 @@ TIME类型表示时间，他的格式是'HH:MM:SS'，范围从'-838:59:59'到'83
 ```
 
 有兴趣可以查看MySQL官方手册 [DATE, DATETIME, and TIMESTAMP Types](http://dev.mysql.com/doc/refman/5.7/en/datetime.html), [Data Type Storage Requirements](https://dev.mysql.com/doc/refman/5.7/en/storage-requirements.html)还有[Fractional Seconds in Time Values](https://dev.mysql.com/doc/refman/5.7/en/fractional-seconds.html).
+
+### 2.3小节：VARCHAR(25)--or not
+
+#### 建议的最大长度
+
+首先，我先声明，有些存储着基本是十六进制或限于ASCII码的字符串，你最好还是设置成```CHARACTER SET ascii```（当然latin1也可以），这样可以节省空间，不至于浪费，示例如下：
+
+```sql
+UUID CHAR(36) CHARACTER SET ascii -- or pack into BINARY(16)
+country_code CHAR(2) CHARACTER SET ascii
+ip_address CHAR(39) CHARACTER SET ascii -- or pack into BINARY(16)
+phone VARCHAR(20) CHARACTER SET ascii -- probably enough to handle extension
+postal_code VARCHAR(20) CHARACTER SET ascii -- (not 'zip_code') (don't know the max
+city VARCHAR(100) -- This Russian town needs 91:
+Poselok Uchebnogo Khozyaystva Srednego Professionalno-Tekhnicheskoye Uchilishche Nomer Odin
+country VARCHAR(50) -- probably enough
+name VARCHAR(64) -- probably adequate; more than some government agencies allow
+```
+
+#### 为什么不直接用VARCHAR(255)
+
+这里有两个原因说明为什么不在任意场景下都直接使用（255）。
+
+* 当一个复杂的**SELECT**语句需要创建临时表时（比如在子查询里，又是**UNION**，又是**GROUP BY**等等），这时候优先的做法是使用**MEMORY**引擎，也就是把数据放到内存RAM里。但是在这个过程中，**VARCHAR**类型会被转化成**CHAR**类型，这就导致```VARCHAR(255) CHARACTER SET utf8mb4```会占用1020字节（255 * 4 = 1020），这就导致这个过程会使用磁盘，磁盘肯定比内存慢得多了。
+
+* 在某些场景下，InnoDB会在建表时候，计算表里列的大小，如果判断结果觉得这个数太大了，就会中断建表流程。
+
+**VARCHAR**对比**TEXT**
+
+以下是一些对TEXT、CHAR和VARCHAR类型的使用提示和最佳实践：
+
+* 不要使用**TINYTEXT**
+* 基本上不要用**CHAR**，因为他是固定长度，每个字符都占用了```CHARACTER SET```的最大长度（比如对utf8mb4来说，一个字符占用4个字节）。
+* 如果使用**CHAR**，如果你没有特别的需求，就使用```CHARACTER SET ascii```。
+* **VARCHAR(n)**会在n个字符时候截断；**TEXT**会在某个字节大小时候截断。（用的时候考虑好，你是否能接受截断，哈哈哈）
+* **TEXT**可能会减慢复杂**SELECT**语句的执行速度，这个就看中间创建的临时表具体是怎么操作的了。
