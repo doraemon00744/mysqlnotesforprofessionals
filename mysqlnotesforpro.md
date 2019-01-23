@@ -397,3 +397,108 @@ b'10000000' -> 128
 有时候我们用“移位”来构成位值也是非常方便的，比如说(1 << 7)表示的就是128。
 
 在一个NDB表中，所有的位列加起来大小不能超过4096位。
+
+## 第三章：SELECT语句
+
+```SELECT```是用来从一个表或多个表里获取数据行的。
+
+### 3.1小节：配合DISTINCT使用的SELECT语句
+
+```SELECT```语句后面跟着```DISTINCT```，就可以从结果集中删除重复的行。
+
+```sql
+CREATE TABLE `car`
+( `car_id` INT UNSIGNED NOT NULL PRIMARY KEY,
+`name` VARCHAR(20),
+`price` DECIMAL(8,2)
+);
+INSERT INTO CAR (`car_id`, `name`, `price`) VALUES (1, 'Audi A1', '20000');
+INSERT INTO CAR (`car_id`, `name`, `price`) VALUES (2, 'Audi A1', '15000');
+INSERT INTO CAR (`car_id`, `name`, `price`) VALUES (3, 'Audi A2', '40000');
+INSERT INTO CAR (`car_id`, `name`, `price`) VALUES (4, 'Audi A2', '40000');
+SELECT DISTINCT `name`, `price` FROM CAR;
++---------+----------+
+| name    | price    |
++---------+----------+
+| Audi A1 | 20000.00 |
+| Audi A1 | 15000.00 |
+| Audi A2 | 40000.00 |
++---------+----------+
+```
+
+```DISTINCT```会横跨所有列去做筛选，而不是某一个列。有些初学者可能会对此表示疑惑和懵逼。简单来说，这个去重是针对整个行级别的，而不是列级别的。大家可以看看上表里的“Audi A1”，就明白了。
+
+在后面版本的MySQL中，**DISTINCT has implications with its use alongside ORDER BY.**TO DO 这句不太好理解。关于```ONLY_FULL_GROUP_BY```这个参数的设置可以在MySQL的官方手册中的[MySQL Handling of
+GROUP BY](http://dev.mysql.com/doc/refman/5.7/en/group-by-handling.html)找到。
+
+### 3.2小节：SELECT所有列(*)
+
+语句如下：
+
+```sql
+SELECT * FROM stack;
+```
+
+结果：
+
+```table
++------+----------+----------+
+| id   | username | password |
++------+----------+----------+
+| 1    | admin    | admin    |
+| 2    | stack    | stack    |
++------+----------+----------+
+2 rows in set (0.00 sec)
+```
+
+你可以在join语句中获取其中一个表的所有列：
+
+```sql
+SELECT stack.* FROM stack JOIN Overflow ON stack.id = Overflow.id;
+```
+
+最佳实践：除非你正在debug或是将数据行导入到关联数组中，不然不要用*，否则当schema变化时（ADD、DROP或者重新调整列）都会导致很恶心的问题。而且，当你置顶了你需要的列时，MySQL有时还能优化查询。
+
+#### 优点：
+
+1. 如果你真的用了```SELECT *```，那么在你增加或删除列时，sql语句不需要作出改变
+2. 写起来很短
+3. 也能查出结果来，所以说使用```SELECT *```到底合理么？
+
+#### 缺点：
+
+1. 你获取了比你所需的还要多的数据。假设你增加了一个```VARBINARY```类型的列，每行数据大概是200K。你可能只在某一个场景下需要查询这个数据，然而你要是用了SELECT *的话，你就会获得很多无用数据，每10条数据大概2MB
+2. 对使用的数据明确
+3. 如果指定了列的话，当一个列被移除时，你的查询就会报错
+4. 查询处理器需要做额外的工作去判断哪些列是存在于表里的
+5. 你可以更容易找到一个列在哪里被使用了
+6. 如果你在join语句用```SELECT *```，那么你将获得所有列
+7. 你没法安全的使用ordinal referencing（虽说在列上使用ordinal referencing本身就不太好）
+
+### 3.3小节：通过列名使用SELECT
+
+```sql
+CREATE TABLE stack(
+id INT,
+username VARCHAR(30) NOT NULL,
+password VARCHAR(30) NOT NULL
+);
+INSERT INTO stack (`id`, `username`, `password`) VALUES (1, 'Foo', 'hiddenGem');
+INSERT INTO stack (`id`, `username`, `password`) VALUES (2, 'Baa', 'verySecret');
+```
+
+查询：
+
+```sql
+SELECT id FROM stack;
+```
+
+结果：
+```table
++------+
+| id   |
++------+
+| 1    |
+| 2    |
++------+
+```
