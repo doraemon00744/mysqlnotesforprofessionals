@@ -640,3 +640,115 @@ SELECT username val FROM stack;
 ```
 
 ### 3.7小节：带LIMIT的SELECT语句
+
+#### 查询：
+
+```sql
+SELECT *
+FROM Customers
+ORDER BY CustomerID
+LIMIT 3;
+```
+
+#### 结果：
+
+|CustomerID|CustomerName|ContactName|Address|City|PostalCode|Country|
+|----|----|----|----|----|----|----|
+|1| Alfreds Futterkiste |Maria Anders |Obere Str. 57 |Berlin |12209| Germany|
+|2| Ana Trujillo Emparedados yhelados |Ana Trujillo |Avda. de laConstitución 2222|México D.F. |05021 |Mexico|
+|3 |Antonio Moreno Taquería |Antonio Moreno Mataderos 2312 |México D.F. |05023 |Mexico|
+
+**最佳实践**用```LIMIT```时候总是使用```ORDER BY```排序，否则的话你将会得到不可预料的结果。
+
+#### 查询：
+
+```sql
+SELECT *
+FROM Customers
+ORDER BY CustomerID
+LIMIT 2,1;
+```
+
+#### 解释：
+
+当```LIMIT```语句后面带两个参数时，我们可以理解为```LIMIT offseet,count```。所以事例中的结果就会跳过两条记录，并且返回一条。
+
+#### 结果：
+
+|CustomerID|CustomerName|ContactName|Address|City|PostalCode|Country|
+|----|----|----|----|----|----|----|
+|3 |Antonio Moreno Taquería |Antonio Moreno Mataderos 2312 |México D.F. |05023 |Mexico|
+
+#### 注意：
+
+LIMIT语句中的值必须是常数，而且不是列值。
+
+### 3.8小节：带BETWEEN的SELECT语句
+
+大家可以用BETWEEN语句来代替组合使用“比某一个值大且比某一个值小”这种场景。
+
+#### 数据：
+
+```table
++----+-----------+
+| id | username  |
++----+-----------+
+| 1  | admin     |
+| 2  | root      |
+| 3  | toor      |
+| 4  | mysql     |
+| 5  | thanks    |
+| 6  | java      |
++----+-----------+
+```
+
+#### 使用操作符的查询语句：
+
+```sql
+SELECT * FROM stack WHERE id >= 2 and id <= 5;
+```
+
+#### 相同含义的使用了```BETWEEN```的查询语句
+
+```sql
+SELECT * FROM stack WHERE id BETWEEN 2 and 5;
+```
+
+#### 结果：
+
+```table
++----+-----------+
+| id | username  |
++----+-----------+
+| 2  | root      |
+| 3  | toor      |
+| 4  | mysql     |
+| 5  | thanks    |
++----+-----------+
+4 rows in set (0.00 sec)
+```
+
+#### 注意：
+> BETWEEN的含义是>=和<=，而不是>和<。
+
+#### 使用```NOT BETWEEN```
+如果你想查询互补结果，你可以使用```NOT```，比如说：
+
+```sql
+SELECT * FROM stack WHERE id NOT BETWEEN 2 and 5;
+```
+
+#### 结果：
+
+```table
++----+-----------+
+| id | username  |
++----+-----------+
+| 1  | admin     |
+| 6  | java      |
++----+-----------+
+2 rows in set (0.00 sec)
+```
+👏
+
+:raised_hands:
