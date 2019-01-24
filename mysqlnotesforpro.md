@@ -1,6 +1,6 @@
 # MySQL Notes For Professionals
 
-## 第一章：开始熟悉MySQL
+## :kissing_smiling_eyes:第一章：开始熟悉MySQL
 
 各个版本发布日期
 
@@ -185,7 +185,7 @@ DESCRIBE tableName;
 
 
 
-## 第二章：数据类型
+## :kissing_smiling_eyes:第二章：数据类型
 
 ### 2.1小节：CHAR(n)
 
@@ -398,7 +398,7 @@ b'10000000' -> 128
 
 在一个NDB表中，所有的位列加起来大小不能超过4096位。
 
-## 第三章：SELECT语句
+## :kissing_smiling_eyes:第三章：SELECT语句
 
 ```SELECT```是用来从一个表或多个表里获取数据行的。
 
