@@ -749,6 +749,49 @@ SELECT * FROM stack WHERE id NOT BETWEEN 2 and 5;
 +----+-----------+
 2 rows in set (0.00 sec)
 ```
-👏
 
-:raised_hands:
+#### 注意：
+
+> ```NOT BETWEEN``` 使用的是```>```和```<```而不是```>=```和```<=```，也就是说```WHERE id NOT BETWEEN 2 and 5```和```WHERE (id < 2 OR id > 5)```是一样的意思
+
+如果你在```BETWEEN```语句里查询的列设有索引，那么MySQL可以利用这个索引做一个范围扫描。
+
+### 3.9小节：带有WHERE条件的SELECT语句
+
+#### 查询：
+
+```sql
+SELECT * FROM stack WHERE username = "admin" AND password = "admin";
+```
+
+#### 结果：
+
+```table
++------+----------+----------+
+| id   | username | password |
++------+----------+----------+
+| 1    | admin    | admin    |
++------+----------+----------+
+1 row in set (0.00 sec)
+```
+
+#### 在WHERE语句中嵌套SELECT语句
+
+WHERE语句中可以包含任意合法的SELECT语句，以便构成更复杂的查询。这里有一个“嵌套”查询
+
+#### 查询：
+
+嵌套在里面的查询通常是用来返回一个单值，用来给外面查询语句做比较用的。
+
+```sql
+SELECT title FROM books WHERE author_id = (SELECT id FROM authors WHERE last_name = 'Bar' AND
+first_name = 'Foo');
+```
+
+查询所有没有email地址的姓名
+
+```sql
+SELECT * FROM stack WHERE username IN (SELECT username FROM signups WHERE email IS NULL);
+```
+
+免责声明：当需要比较一整个结果集的时候，可以考虑用[joins](https://stackoverflow.com/questions/17946221/sql-join-and-different-types-of-joins)来提高性能。
