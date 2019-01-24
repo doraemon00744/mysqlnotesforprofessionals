@@ -502,3 +502,141 @@ SELECT id FROM stack;
 | 2    |
 +------+
 ```
+
+### 3.4小节：SELECT LIKE(%)语句
+
+```sql
+CREATE TABLE stack
+( id int AUTO_INCREMENT PRIMARY KEY,
+username VARCHAR(100) NOT NULL
+);
+INSERT stack(username) VALUES
+('admin'),('k admin'),('adm'),('a adm b'),('b XadmY c'), ('adm now'), ('not here');
+```
+
+现在查询所有带着“adm”的数据：
+
+```sql
+SELECT * FROM stack WHERE username LIKE "%adm%";
++----+-----------+
+| id | username  |
++----+-----------+
+| 1  | admin     |
+| 2  | k admin   |
+| 3  | adm       |
+| 4  | a adm b   |
+| 5  | b XadmY c |
+| 6  | adm now   |
++----+-----------+
+```
+
+查询所有以“adm”开头的：
+
+```sql
+SELECT * FROM stack WHERE username LIKE "adm%";
++----+----------+
+| id | username |
++----+----------+
+| 1  | admin    |
+| 3  | adm      |
+| 6  | adm now  |
++----+----------+ 
+```
+
+查询所有以“adm”结尾的：
+
+```sql
+SELECT * FROM stack WHERE username LIKE "%adm";
++----+----------+
+| id | username |
++----+----------+
+| 3  | adm      |
++----+----------+
+```
+
+```LIKE```语句中的```%```可以匹配任意数量的字符，而```_```只匹配一个任意字符，比如说：
+
+```sql
+SELECT * FROM stack WHERE username LIKE "adm_n";
++----+----------+
+| id | username |
++----+----------+
+| 1  | admin    |
++----+----------+
+```
+
+**关于性能方面的一些提示**如果```username```字段上面建立了索引的话，则：
+
+* 执行```LIKE 'adm'```会和你写```='adm'```是一样的
+* 执行```LIKE 'adm%'```会变成一个范围，有点类似```BETWEEN..AND..```，可以很好地利用索引
+* 执行```LIKE '%adm'```（或者其他的以通配符开始的类似查询）不能使用索引，所以速度非常慢，如果表里有很多列的话，整个查询会非常慢以至于一无是处。
+* ```RLICE(REGEXP)```比LIKE还慢，不过它具有更多的功能。
+* 虽然**MySQL**在各种类型表和列提供了全文索引功能，但是这些功能不是用来满足类似```LIKE```这种查询的
+
+### 3.5小节：带有CASE和IF的SELECT语句
+
+#### 查询：
+
+```sql
+SELECT st.name,
+st.percentage,
+CASE WHEN st.percentage >= 35 THEN 'Pass' ELSE 'Fail' END AS `Remark`
+FROM student AS st ;
+```
+
+#### 结果：
+
+```table
++--------------------------------+
+| name  | percentage | Remark    |
++--------------------------------+
+| Isha  | 67         | Pass      |
+| Rucha | 28         | Fail      |
+| Het   | 35         | Pass      |
+| Ansh  | 92         | Pass      |
++--------------------------------+
+```
+
+#### 或者使用IF语句：
+
+```sql
+SELECT st.name,
+st.percentage,
+IF(st.percentage >= 35, 'Pass', 'Fail') AS `Remark`
+FROM student AS st ;
+```
+
+#### 注意：
+
+```sql
+IF(st.percentage >= 35, 'Pass', 'Fail')
+```
+
+> 这个意思是，当```st.percentage >= 35```时，返回’Pass‘，否则返回’Fail‘
+
+### 3.6小节：带别名的SELECT语句
+
+SQL中的别名是用来临时给一个表或者列取名的，一般用来提高可读性。
+
+#### 查询：
+
+```sql
+SELECT username AS val FROM stack;
+SELECT username val FROM stack;
+```
+
+（注意：```AS```是可以省略的）
+
+#### 结果：
+
+```table
++-------+
+| val   |
++-------+
+| admin |
+| stack |
++-------+
+2 rows in set (0.00 sec)
+```
+
+### 3.7小节：带LIMIT的SELECT语句
