@@ -795,3 +795,41 @@ SELECT * FROM stack WHERE username IN (SELECT username FROM signups WHERE email 
 ```
 
 免责声明：当需要比较一整个结果集的时候，可以考虑用[joins](https://stackoverflow.com/questions/17946221/sql-join-and-different-types-of-joins)来提高性能。
+
+### 3.10小节：使用LIKE(_)的SELECT语句
+
+```LIKE```里面的_可以匹配一个字符
+
+#### 查询：
+
+```sql
+SELECT username FROM users WHERE users LIKE 'admin_';
+```
+
+#### 结果：
+
+```table
++----------+
+| username |
++----------+
+| admin1   |
+| admin2   |
+| admin-   |
+| adminA   |
++----------+
+```
+
+### 3.11小节：查询日期范围的SELECT语句
+
+```sql
+SELECT ... WHERE dt >= '2017-02-01'
+AND dt < '2017-02-01' + INTERVAL 1 MONTH
+```
+
+当然这个语句可以换成```BETWEEN```形式，并且带上23:59:59。不过上面这种形式还包含以下优点：
+
+* 你不必重新计算后面那个日期（因为一般后面那个日期都与前面那个日期相隔一段具体的时间）
+* You don't include both endpoints (as BETWEEN does), nor type '23:59:59' to avoid it.
+* 对```DATE```, ```TIMESTAMP```, ```DATETIME```类型甚至包含微秒的```DATETIME(6)```都支持
+* 它考虑了闰日和年末等情况
+* 它是索引友好的（BETWEEN也是）
