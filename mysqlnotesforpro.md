@@ -836,6 +836,44 @@ AND dt < '2017-02-01' + INTERVAL 1 MONTH
 
 ## 第四章：重音符的使用
 
+### 4.1小节：使用重音符
+
+有很多事例里面都在查询语句中使用了重音符，但是对于很多人来说还是不清楚何时何地应该使用重音符。
+
+重音符的使用主要是为了避免一种叫做“MySQL保留字”的错误。当你在PHPmyAdmin中创建一个表时，经常会碰到警告或者报错，其中会告诉你，你正在使用“MySQL的保留字”。
+
+举个例子，当你创建一个表时，将一列命名为“group”，你就会看到一个警告。这是因为你这么写sql了：
+
+```sql
+SELECT student_name, AVG(test_score) FROM student GROUP BY group
+```
+
+如果不想报错的话，你把语句改成如下这样：
+
+```sql
+SELECT student_name, AVG(test_score) FROM student GROUP BY `group`
+```
+
+#### 表
+
+不光是列名，表名同样可以用重音符括起来。比如说当你需要```JOIN```多个表时。
+
+```sql
+SELECT `users`.`username`, `groups`.`group` FROM `users`
+```
+
+#### 方便阅读
+
+大家可以发现，当用重音符把列名和表名括起来时，会使得我们的查询语句更加易读。
+比如说当你习惯于用小写字母书写语句时：
+
+```sql
+select student_name, AVG(test_score) from student group by group
+select `student_name`, AVG(`test_score`) from `student` group by `group`
+```
+
+请移步查看MySQL官方文档[Keywords and Reserved Words](https://dev.mysql.com/doc/refman/5.5/en/keywords.html)。带有(R)标记的那些就是保留字。其他的只是关键字。保留字需要大家特别注意。
+
 ## 第五章：NULL
 
 ## 第六章：Limit和Offset
