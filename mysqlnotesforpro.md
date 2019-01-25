@@ -914,6 +914,14 @@ AND dt < '2017-02-01' + INTERVAL 1 MONTH
 
 ## 第四十三章：MyISAM引擎
 
+### 43.1小节：把引擎改为MyISAM
+
+```sql
+CREATE TABLE foo (
+...
+) ENGINE=MyISAM;
+```
+
 ## 第四十四章：从MyISAM转到InnoDB
 
 ## 第四十五章：事务
