@@ -899,6 +899,90 @@ WHERE b.id IS NULL
 
 ## 第六章：Limit和Offset
 
+### 6.1小节：Limit和Offset的关系
+
+考虑如下表数据：
+
+|id|username|
+|--|--|
+|1|User1|
+|2|User2|
+|3|User3|
+|4|User4|
+|5|User5|
+
+为了能对[SELECT查询](https://dev.mysql.com/doc/refman/5.7/en/select.html)查出来的数据条数进行限制，我们可以用带1个或2个正整数参数（包括0在内）的LIMIT语句。
+
+#### 带一个参数的```LIMIT```语句
+
+当只是用一个参数时，结果集就只是被这个参数限定，示例如下：
+
+```sql
+SELECT * FROM users ORDER BY id ASC LIMIT 2
+```
+
+|id|username|
+|--|--|
+|1|User1|
+|2|User2|
+
+如果把该参数设置成0，那么结果集返回为空。
+注意ORDER BY语句的重要性，它的使用将会导致返回结果集的不同（当用其他列排序时）。
+
+#### 带两个参数的```LIMIT```语句
+
+当LIMIT语句带两个参数时：
+* 第一个参数代表从哪一行开始展示结果集，这个数通常被叫做offset偏移量，因为它代表着被限定的结果集首行前面有多少行。这个数可以是0。
+* 第二个参数代表返回结果集的最大行数（类似一个参数的情况）。
+
+所以，如下语句：
+
+```sql
+SELECT * FROM users ORDER BY id ASC LIMIT 2, 3
+```
+
+将会返回：
+|id|username|
+|--|--|
+|3|User3|
+|4|User4|
+|5|User5|
+
+注意当offset偏移量为0时，等效于带1个参数的LIMIT语句。这就意味着如下两个查询语句：
+
+```sql
+SELECT * FROM users ORDER BY id ASC LIMIT 0, 2
+SELECT * FROM users ORDER BY id ASC LIMIT 2
+```
+
+效果一样，都返回一样的数据：
+
+|id|username|
+|--|--|
+|1|User1|
+|2|User2|
+
+#### OFFSET关键字：作为另一种选择的语法
+
+还有一种带两个参数的LIMIT语句用法，就是使用OFFSET关键字，比如：
+
+```sql
+SELECT * FROM users ORDER BY id ASC LIMIT 2 OFFSET 3
+```
+
+结果如下：
+将会返回：
+|id|username|
+|--|--|
+|4|User4|
+|5|User5|
+
+注意，这种写法和之前那种写法相当于两个数字替换了位置：
+
+* 第一个参数代表需要返回结果集的行数；
+* 第二个参数代表offset偏移量。
+
+
 ## 第七章：创建数据库
 
 ## 第八章：使用变量
