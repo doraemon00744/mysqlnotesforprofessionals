@@ -978,6 +978,110 @@ CREATE TABLE foo (
 
 ## 第五十二章：LOAD DATA INFILE
 
+### 52.1小节：通过使用```LOAD DATA INFILE```来将大量数据导入数据库
+
+考虑如下情况，假设你要把一个分号分隔的CSV文件导入数据库中。
+
+```csv
+1;max;male;manager;12-7-1985
+2;jack;male;executive;21-8-1990
+...
+1000000;marta;female;accountant;15-6-1992
+```
+
+创建需要导入数据的表。
+
+```sql
+CREATE TABLE `employee` ( `id` INT NOT NULL ,
+`name` VARCHAR NOT NULL,
+`sex` VARCHAR NOT NULL ,
+`designation` VARCHAR NOT NULL ,
+`dob` VARCHAR NOT NULL );
+```
+
+使用如下语句将数据导入这张表里：
+
+```sql
+LOAD DATA INFILE 'path of the file/file_name.txt'
+INTO TABLE employee
+FIELDS TERMINATED BY ';' //specify the delimiter separating the values
+LINES TERMINATED BY '\r\n'
+(id,name,sex,designation,dob)
+```
+考虑一下日期格式不标准的情况：
+
+```csv
+1;max;male;manager;17-Jan-1985
+2;jack;male;executive;01-Feb-1992
+...
+1000000;marta;female;accountant;25-Apr-1993
+```
+在这种情况下，你可以在把数据插入到表里之前，对日期数据进行格式化，如下：
+
+```sql
+LOAD DATA INFILE 'path of the file/file_name.txt'
+INTO TABLE employee
+FIELDS TERMINATED BY ';' //specify the delimiter separating the values
+LINES TERMINATED BY '\r\n'
+(id,name,sex,designation,@dob)
+SET date = STR_TO_DATE(@date, '%d-%b-%Y');
+```
+
+上面例子里并没有涉及到```LOAD DATA INFILE```所有的功能，想获取更详细的信息，大家可以参照官方文档[点我](https://dev.mysql.com/doc/refman/5.7/en/load-data.html)。
+
+### 52.2有重复数据的LOAD DATA
+
+如果你使用```LOAD DATA INFILE```命令往表里导入数据时候，表里已经存在你要导入的数据了，这时导入会因为重复数据而失败。为了解决这个问题，有如下几个方案。
+
+#### LOAD DATA LOCAL
+
+这个选项已经在你的服务端开启，用处是将存在于客户端而不是服务端的文件数据导入到数据库。其中的一个副作用就是，对于需要保持唯一性的重复数据，它会直接忽略掉。
+
+```sql
+LOAD DATA LOCAL INFILE 'path of the file/file_name.txt'
+INTO TABLE employee
+```
+
+#### LOAD DATA INFILE 'fname' REPLACE
+
+当我们使用replace关键字时，重复的唯一性数据或者主键将会有如下表现，之前存在于表里的数据将会被新的替换掉：
+
+```sql
+LOAD DATA INFILE 'path of the file/file_name.txt'
+REPLACE INTO TABLE employee
+```
+
+#### LOAD DATA INFILE 'fname' IGNORE
+
+这个正好和REPLACE关键字相反，会保留之前存在于表里的数据，把新的直接忽略。这个行为类似于前面我们讲的LOCAL的那种模式，不一样的就是这里的这个文件不能是存在客户端的。
+
+```sql
+LOAD DATA INFILE 'path of the file/file_name.txt'
+IGNORE INTO TABLE employee
+```
+
+#### 通过使用中间表导入数据
+
+有时候，不管是忽略还是替换都不是最佳方案。我们需要根据实际数据内容来作出决定，在这种情境下，最好的办法是把数据导入到中间表里，然后再从中间表转移数据。
+
+```sql
+INSERT INTO employee SELECT * FROM intermediary WHERE ...
+```
+
+### 52.3小节：将CSV文件数据导入到MySQL表里
+
+下面的命令就是把CSV文件中数据导入到MySQL表里，此处的CSV文件数据有着相同的列，并且符合CSV的引用和转移规则。
+
+```sql
+load data infile '/tmp/file.csv'
+into table my_table
+fields terminated by ','
+optionally enclosed by '"'
+escaped by '"'
+lines terminated by '\n'
+ignore 1 lines; -- skip the header row
+```
+
 ## 第五十三章：MySQL unions
 
 ## 第五十四章：MySQL客户端
