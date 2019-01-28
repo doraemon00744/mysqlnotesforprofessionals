@@ -876,6 +876,27 @@ select `student_name`, AVG(`test_score`) from `student` group by `group`
 
 ## 第五章：NULL
 
+### 5.1小节：NULL的用法
+
+* 未知数据，比如end_date，rating等
+* 可选数据，比如middle_initial（虽说这里用空字符串更好点）
+* 0/0，某些计算的结果，比如说0除以0
+* 别的什么？
+
+### 5.2小节：检测是否NULL
+
+* 可以用IS NULL或者IS NOT NULL，= NULL是没用的
+* x <=> y是“NULL类型安全的”比较
+
+在```LEFT JOIN```语句中用来得到在表a中且不在表b中数据：
+
+```sql
+SELECT ...
+FROM a
+LEFT JOIN b ON ...
+WHERE b.id IS NULL
+```
+
 ## 第六章：Limit和Offset
 
 ## 第七章：创建数据库
