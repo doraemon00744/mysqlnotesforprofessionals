@@ -991,6 +991,86 @@ SELECT * FROM users ORDER BY id ASC LIMIT 2 OFFSET 3
 
 ## 第十章：INSERT语句
 
+### 10.1小节：INSERT，ON DUPLICATE KEY UPDATE
+
+```sql
+INSERT INTO `table_name`
+(`index_field`, `other_field_1`, `other_field_2`)
+VALUES
+('index_value', 'insert_value', 'other_value')
+ON DUPLICATE KEY UPDATE
+`other_field_1` = 'update_value',
+`other_field_2` = VALUES(`other_field_2`);
+```
+
+这个语句将会在表table_name中插入指定数据，但是如果唯一键已经存在，它将会把列other_field_1更新为一个新值。
+当你更新重复键时，有时更方便的做法是使用```VALUES()```语句，这样可以获取到传递给INSERT语句的原始值，而不是直接指定一个新值。用这种方式，你可以使用```INSERT```和```UPDATE```去设定一个新值。比如上面例子中，你可以使用```INSERT```将other_field_1列设置成insert_value或者用```UPDATE```将其更新为update_value，而other_field_2被设置成other_value。
+
+特别注意下，INSERT ON DUPLICATE KEY UPDATE（IODKU）工作的前提是数据库中包含唯一键。这个唯一键可以是主键也可不是。它可以是单列上的唯一键，也可以是多列上的唯一键（组合键）。
+
+### 10.2小节：插入多行
+
+```sql
+INSERT INTO `my_table` (`field_1`, `field_2`) VALUES
+('data_1', 'data_2'),
+('data_1', 'data_3'),
+('data_4', 'data_5');
+```
+这是在一个INSERT语句中插入多行的简便做法。
+这种“批量”插入比一个一个插入快得多。具体来说，在批量模式插入100条数据比一条一条插入这些数据要快10倍。
+
+#### 忽略已经存在的行
+
+当我们插入大量数据时，比较倾向的做法是把那些由于列限制比如重复主键导致插入语句失败的数据忽略掉。这种情况我们可以使用INSERT IGNORE。
+
+考虑如下事例：
+
+```sql
+SELECT * FROM `people`;
+--- Produces:
++----+------+
+| id | name |
++----+------+
+| 1 | john |
+| 2 | anna |
++----+------+
+INSERT IGNORE INTO `people` (`id`, `name`) VALUES
+('2', 'anna'), --- Without the IGNORE keyword, this record would produce an error
+('3', 'mike');
+SELECT * FROM `people`;
+--- Produces:
++----+--------+
+| id | name |
++----+--------+
+| 1 | john |
+| 2 | anna |
+| 3 | mike |
++----+--------+
+```
+
+要注意的一点是，```INSERT IGNORE```会把其他一些异常报错一起忽略掉，下面是MySQL官方的说法：
+> 如果没有设置```IGNORE```，则那些会报错的数据转换会终止sql语句的执行。如果设置了```IGNORE```，则不合法的数据会被调整成最接近的合法数据并插入；会产生警告消息，但是不会终止语句执行。
+
+注意：下面一部分内容是为了章节的完整性加入的，但是不作为最佳实践（如果我们的表多加了一列的话，这个语句是不能成功执行的）。
+
+如果你在```INSERT```语句中设置了每一列的对应数据，那么可以省略描述列的列表书写，比如：
+
+```sql
+INSERT INTO `my_table` VALUES
+('data_1', 'data_2'),
+('data_1', 'data_3'),
+('data_4', 'data_5');
+```
+
+### 10.3小节：基本的insert
+
+```sql
+INSERT INTO `table_name` (`field_one`, `field_two`) VALUES ('value_one', 'value_two');
+```
+在这个小例子中，table_name是我们要插入数据的表，field_one和fiel_two是我们要插入数据的列，value_one和value_two是我们分别要插入的数据。
+
+编码时的最佳实践是把你要插入数据的列都写出来，这样当表结构有更改加入新的列后，如果你不列出的话，这个语句会报错。
+
 ## 第十一章：DELETE语句
 
 ## 第十二章：UPDATE语句
