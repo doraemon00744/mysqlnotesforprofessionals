@@ -1071,6 +1071,22 @@ INSERT INTO `table_name` (`field_one`, `field_two`) VALUES ('value_one', 'value_
 
 编码时的最佳实践是把你要插入数据的列都写出来，这样当表结构有更改加入新的列后，如果你不列出的话，这个语句会报错。
 
+### 10.4小节：带有AUTO_INCREMENT和LAST_INSERT_ID()的insert语句
+
+当一个表里有自增主键时候，我们一般不会往那一列插入数据。取而代之的是，我们设置其他所有列的数据，然后获取到这个新数据id：
+
+```sql
+CREATE TABLE t (
+id SMALLINT UNSIGNED AUTO_INCREMENT NOT NULL,
+this ...,
+that ...,
+PRIMARY KEY(id) );
+INSERT INTO t (this, that) VALUES (..., ...);
+SELECT LAST_INSERT_ID() INTO @id;
+INSERT INTO another_table (..., t_id, ...) VALUES (..., @id, ...);
+```
+需要注意的是LAST_INSERT_ID()是和session绑定的
+
 ## 第十一章：DELETE语句
 
 ## 第十二章：UPDATE语句
@@ -1112,6 +1128,44 @@ INSERT INTO `table_name` (`field_one`, `field_two`) VALUES ('value_one', 'value_
 ## 第三十章：存储例程（过程和函数）
 
 ## 第三十一章：索引和键
+
+### 31.1小节：创建索引
+
+```sql
+-- 在表my_table的列name上创建索引
+CREATE INDEX idx_name ON my_table(name);
+```
+
+### 31.2小节：创建唯一索引
+
+唯一索引可以防止在表中插入重复数据。在组成唯一索引的列中，可以插入NULL值（毕竟，从定义上来说，一个NULL值不同于任何值，包括另一个NULL值）
+
+```sql
+-- 在表my_table的列name上创建唯一索引
+CREATE UNIQUE INDEX idx_name ON my_table(name);
+```
+
+### 31.3小节：自增键
+
+```sql
+CREATE TABLE (
+id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+...
+PRIMARY KEY(id),
+... );
+```
+
+格外注意：
+* 如果你没有在INSERT语句中特别指定，自增键会从1开始，并且自增1，或者你直接指定它为NULL。
+* 这个id基本上都是互不相同，然而...
+* 
+
+不易察觉的注意点：
+* 服务重启时，自增主键的“下一个”值是按照MAX(id) + 1来“计算”的。
+* 如果在服务关闭或崩溃前的最后操作是删除了最大的id，此时这个id将被重复使用（这个特性是引擎相关的）。因此，不要相信自增会永久不唯一；他们只是在每个时刻不唯一。
+* 对于多主或集群解决方案，注意auto_increment_offset和auto_increment_increment值。
+* 完全可以将其他列设置为```主键```，或者直接在id上创建索引```INDEX(id)```。（在某些场景下，这是一种优化手段）
+
 
 ## 第三十二章：全文搜索
 
