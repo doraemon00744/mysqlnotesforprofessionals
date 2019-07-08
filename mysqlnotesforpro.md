@@ -1121,7 +1121,82 @@ INSERT INTO another_table (..., t_id, ...) VALUES (..., @id, ...);
 
 ## 第二十七章：删表
 
-## 第二十八章：MySQL锁表
+## 第二十八章：MySQL锁
+
+### 28.1小节：行级锁
+
+如果我们的表用的是InnoDB存储引擎，那么MySQL自动会使用行级锁，这样多个事务可以同时对同一张表进行读写操作，而不用相互之间进行等待。
+
+如果两个事务要修改同一行且同时使用了行级锁，其中一个事务就必须等待直到另外一个事务完成。
+也可以通过在想要更改的行上面使用```SELECT ... FOR UPDATE```来显示地使用行级锁。
+
+下面使用两个连接来详细的说明行级锁：
+
+连接1
+
+```sql
+START TRANSACTION;
+SELECT ledgerAmount FROM accDetails WHERE id = 1 FOR UPDATE;
+```
+
+在以上连接当中，通过语句```SELECT ... FOR UPDATE```显示地获取了行级锁。
+
+连接2
+
+```sql
+UPDATE accDetails SET ledgerAmount = ledgerAmount + 500 WHERE id=1;
+```
+此时，当我们在连接2中需要对同一行进行更新时，就必须等待连接1中的事务完成或者超时后抛异常，关于这个锁超时的设置，大家可以参考innodb_lock_wait_timeout属性，默认值是50秒。
+
+```
+Error Code: 1205. Lock wait timeout exceeded; try restarting transaction
+```
+
+```
+---TRANSACTION 1973004, ACTIVE 7 sec updating
+mysql tables in use 1, locked 1
+LOCK WAIT 2 lock struct(s), heap size 360, 1 row lock(s)
+MySQL thread id 4, OS thread handle 0x7f996beac700, query id 30 localhost root update
+UPDATE accDetails SET ledgerAmount = ledgerAmount + 500 WHERE id=1
+------- TRX HAS BEEN WAITING 7 SEC FOR THIS LOCK TO BE GRANTED:
+```
+
+连接2
+
+```sql
+UPDATE accDetails SET ledgerAmount = ledgerAmount + 250 WHERE id=2;
+```
+
+```sql
+1 row(s) affected
+```
+从上面看到，如果在连接2中试图去更新另外一行的话会正常执行。
+
+连接1
+
+```sql
+UPDATE accDetails SET ledgerAmount = ledgerAmount + 750 WHERE id=1;
+COMMIT;
+```
+
+```sql
+1 row(s) affected
+```
+
+此时行级锁就被释放了，因为连接1中的事务已经提交了。
+
+连接2
+
+```sql
+UPDATE accDetails SET ledgerAmount = ledgerAmount + 500 WHERE id=1;
+```
+
+```sql
+1 row(s) affected
+```
+
+当连接1中的事务完成后释放了行级锁，在连接2中的更新操作就可以正常执行完成了。
+
 
 ## 第二十九章：错误码
 
@@ -1156,11 +1231,13 @@ PRIMARY KEY(id),
 ```
 
 格外注意：
+
 * 如果你没有在INSERT语句中特别指定，自增键会从1开始，并且自增1，或者你直接指定它为NULL。
 * 这个id基本上都是互不相同，然而...
 * 
 
 不易察觉的注意点：
+
 * 服务重启时，自增主键的“下一个”值是按照MAX(id) + 1来“计算”的。
 * 如果在服务关闭或崩溃前的最后操作是删除了最大的id，此时这个id将被重复使用（这个特性是引擎相关的）。因此，不要相信自增会永久不唯一；他们只是在每个时刻不唯一。
 * 对于多主或集群解决方案，注意auto_increment_offset和auto_increment_increment值。
