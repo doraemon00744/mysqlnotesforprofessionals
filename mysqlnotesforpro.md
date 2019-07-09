@@ -1197,6 +1197,61 @@ UPDATE accDetails SET ledgerAmount = ledgerAmount + 500 WHERE id=1;
 
 当连接1中的事务完成后释放了行级锁，在连接2中的更新操作就可以正常执行完成了。
 
+### 28.2小节：Mysql锁
+
+表级锁在当你使用引擎是MyISAM时候是一个非常重要的工具，但是当你使用的引擎是InnoDB的时候并不是这样。如果你在使用InnoDB引擎的时候要使用表级锁，你就得重新思考一下你处理事务的方式了。
+
+MySQL可以让客户端会话在与别的会话合作，需要访问数据表时候显示地获取表级锁；亦或是当一个会话需要排他性访问数据表时候，阻止其他会话在此时对数据表进行修改。一个会话只能由他自己来获取和释放锁。也就是说，一个会话不能帮另一个会话获取锁，同时也不能释放由其他会话所持有的锁。
+
+锁命令可以用来模拟事务或者在更新数据表时提升速度。本章后续会对此进行更详细的解释。
+
+命令：```LOCK TABLES table_name READ|WRITE;```
+
+你只能为一个表指定锁类型；
+
+示例（读锁）：
+
+```sql
+LOCK TABLES table_name READ;
+```
+
+示例（写锁）：
+
+```sql
+LOCK TABLES table_name WRITE;
+```
+
+查看是否使用了表锁，用下列命令
+
+```sql
+SHOW OPEN TABLES;
+```
+
+释放或者去除所有的表锁，用下列命令：
+
+```sql
+UNLOCK TABLES;
+```
+
+示例：
+
+```sql
+LOCK TABLES products WRITE:
+INSERT INTO products(id,product_name) SELECT id,old_product_name FROM old_products;
+UNLOCK TABLES;
+```
+
+在上面例子中，在释放了表products的表锁之前，其他任何连接会话都不能对这个表数据进行任何修改。
+
+示例：
+
+```sql
+LOCK TABLES products READ:
+UNLOCK TABLES;
+```
+
+在上面例子中，其他任何连接会话都可以读取到表products内容，不管本会话是否释放了表products的表锁。
+
 
 ## 第二十九章：错误码
 
