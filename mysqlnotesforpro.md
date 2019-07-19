@@ -239,9 +239,7 @@ TIME类型表示时间，他的格式是'HH:MM:SS'，范围从'-838:59:59'到'83
 
 有兴趣可以查看MySQL官方手册 [DATE, DATETIME, and TIMESTAMP Types](http://dev.mysql.com/doc/refman/5.7/en/datetime.html), [Data Type Storage Requirements](https://dev.mysql.com/doc/refman/5.7/en/storage-requirements.html)还有[Fractional Seconds in Time Values](https://dev.mysql.com/doc/refman/5.7/en/fractional-seconds.html).
 
-### 2.3小节：VARCHAR(25)--or not
-
-#### 建议的最大长度
+### 2.3小节：用VARCHAR(255)--还是不这么用
 
 首先，我先声明，有些存储着基本是十六进制或限于ASCII码的字符串，你最好还是设置成```CHARACTER SET ascii```（当然latin1也可以），这样可以节省空间，不至于浪费，示例如下：
 
@@ -1073,7 +1071,7 @@ INSERT INTO `table_name` (`field_one`, `field_two`) VALUES ('value_one', 'value_
 
 ### 10.4小节：带有AUTO_INCREMENT和LAST_INSERT_ID()的insert语句
 
-当一个表里有自增主键时候，我们一般不会往那一列插入数据。取而代之的是，我们设置其他所有列的数据，然后获取到这个新数据id：
+当一个表里有自增主键时候，我们一般不会直接往那一列插入数据。取而代之的是，我们设置其他所有列的数据，然后获取到这个新数据id：
 
 ```sql
 CREATE TABLE t (
@@ -1085,7 +1083,7 @@ INSERT INTO t (this, that) VALUES (..., ...);
 SELECT LAST_INSERT_ID() INTO @id;
 INSERT INTO another_table (..., t_id, ...) VALUES (..., @id, ...);
 ```
-需要注意的是LAST_INSERT_ID()是和session绑定的
+需要注意的是LAST_INSERT_ID()是和会话绑定的，所以即使多个连接同时插入同一张表，每个连接获取的都是自己会话的id。
 
 ## 第十一章：DELETE语句
 
@@ -1105,7 +1103,69 @@ INSERT INTO another_table (..., t_id, ...) VALUES (..., @id, ...);
 
 ## 第十九章：算术
 
-## 第二十章：操作字符串
+## 第二十章：字符串相关操作
+|函数名|描述|
+|----|----|
+|ASCII()|返回字符串最左边的字符的ascii码数值|
+|BIN()|返回一个数字的二进制表示字符串|
+|BIT_LENGTH()|返回参数的二进制位数|
+|CHAR()|返回整数所代表的字符|
+|CHAR_LENGTH()|返回参数中有多少个字符|
+|CHARACTER_LENGTH()|和CHAR_LENGTH()一个意思|
+|CONCAT()|返回一个连接起来的字符串|
+|CONCAT_WS()|返回带分隔符的连接起来的字符串|
+|ELT()|返回指定索引上字符串列表中的的字符串|
+|EXPORT_SET()|数字转成位后，1映射为On值，0映射为Off值，然后拼接起来|
+|FIELD()|返回第一个参数在后续参数列表中的索引（位置）|
+|FIND_IN_SET()|返回第一个参数在第二个参数中的索引（位置）|
+|FORMAT()|返回一个格式化的数组，可以设置小数位数|
+|FROM_BASE64()|将base64编码后的字符串解码并返回|
+|HEX()|返回一个数字或字符串的16进制表示|
+|INSERT()|插入一个子字符串，位置可以设定，最大字符数也可以设定|
+|INSTR()|返回子串首次出现的索引|
+|LCASE()|和LOWER()一样|
+|LEFT()|返回从左边开始指定个数的字符|
+|LENGTH()|返回给定字符串的字节数|
+|LIKE|简单模式匹配|
+|LOAD_FILE()|加载指定名称的文件|
+|LOCATE()|返回子串首次出现的位置|
+|LOWER()|返回参数的小写字母形式|
+|LPAD()|返回在参数左边填充了指定字符串的新字符串|
+|LTRIM()|去除开头的空格|
+|MAKE_SET()|返回一个逗号分隔的字符串，是由数字所代表的二进制位决定|
+|MATCH|用来执行全文搜索|
+|MID()|返回从指定位置开始的子串|
+|NOT LIKE|简单模式匹配的否定形式|
+|NOT REGEXP|正则表达式的否定形式|
+|OCT()|返回一个数字的8进制表示|
+|OCTET_LENGTH()|和LENGTH()一样|
+|ORD()|返回参数最左边字符的字符码|
+|POSITION()|和LOCATE()一样|
+|QUOTE()|转义参数，用于SQL语句中|
+|REGEXP|用正则表达式的模式匹配|
+|REPEAT()|将某字符串重复指定次数|
+|REPLACE()|将指定字符串替换掉|
+|REVERSE()|翻转字符串中的字符|
+|RIGHT()|返回右边开始指定个数的字符|
+|RLIKE|和REGEXP一样|
+|RPAD()|在末尾追加指定次数字符串|
+|RTRIM()|去除末尾的空格|
+|SOUNDEX()|返回soundex的字符串，发音相似的|
+|SOUNDS LIKE|比较发音|
+|SPACE()|返回一个包含指定个数空格的字符串|
+|STRCMP()|比较两个字符串|
+|SUBSTR()|返回指定子串|
+|SUBSTRING()|返回指定子串|
+|SUBSTRING_INDEX()|返回一个截取到指定次数分隔符之前的子串|
+|TO_BASE64()|返回一个将参数base64编码后的字符串|
+|TRIM()|把前导和后置的空格全部去除|
+|UCASE()|和UPPER()一样|
+|UNHEX()|返回一个16进制代表的字符|
+|UPPER()|转成大写|
+|WEIGHT_STRING()|返回一个字符串的重量，这个重量是一个二进制串，代表字符串的排序和比较值|
+
+
+
 
 ## 第二十一章：操作日期和时间
 
